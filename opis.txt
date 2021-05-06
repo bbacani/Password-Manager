@@ -1,0 +1,19 @@
+Za deriviranje ključa koristio sam PBKDF2 algoritam pomoću kojeg se iz master passworda i adrese (sa saltom) generira 64 bitni ključ
+PBKDF2 provodi 1000000 iteracija te koristi HMAC-SHA512 kao pseudorandom funkciju čime se smanjuje ranjivost od napada grubom silom
+Tako generirani ključ se zatim koristi za kriptiranje/dekriptiranje kod AES-GCM šifre koja pruža svojstvo povjerljivosti i integriteta
+
+
+Kod šifriranja prvo se na podatke dodaje padding kako se ne bi mogla otkriti njihova duljina
+Zatim se u AES predaju ključ, podaci i salt te se šifriranjem dobije šifrat i oznaka
+Za šifriranje adrese koriste se prva 32 bita deriviranog ključa, a za šifriranje lozinke druga 32 bita
+
+Kod svakog šifriranja prvo se provjerava postoji li već postavljena lozinka za predanu adresu
+te ako postoji izbriše se i adresa i lozinka i njezin salt te ponovo generira novi salt i šifrira sve troje
+
+Šifrat i oznaka se spremaju u cipher.txt, a salt u salt.txt
+
+
+Kod dešifriranja ponovo se generira derivirani ključ iz predanog master passworda i adrese (sa saltom iz salt.txt)
+te se pomoću AES-a dešifrira i verificira predani ključ (prolazi se kroz sve parove adresa-lozinka u cipher.txt te ako su šifra i oznaka identične, vrati se šifra bez paddinga)
+
+Ako je predan krivi master password ili kriva adresa ili je narušen integritet vraća se poruka 'Data breach.'
